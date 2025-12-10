@@ -1,6 +1,7 @@
 """
 Hybrid Agent (modular): Supervisor + CodingSquad + Architect + Guardrail + Validator + MCP-only tools.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -11,14 +12,18 @@ from pathlib import Path
 from langchain_core.messages import ToolMessage
 
 from ollama_coder.core.config import RunConfig
-from ollama_coder.core.supervisor import build_graph
 from ollama_coder.core.mcp_loader import close_mcp_session
+from ollama_coder.core.supervisor import build_graph
 
 
 def parse_args():
     p = argparse.ArgumentParser(description="Hybrid Agent (Supervisor + Swarm + Architect + Guardrail + MCP)")
     p.add_argument("--task", dest="task", nargs="*", help="Task description")
-    p.add_argument("--check-command", default="pytest -q", help="Validator command; empty to disable")
+    p.add_argument(
+        "--check-command",
+        default="pytest -q",
+        help="Validator command; empty to disable",
+    )
     p.add_argument("--max-loops", type=int, default=16)
     p.add_argument("--recursion-limit", type=int, default=80)
     p.add_argument("--coder-model", default="qwen2.5-coder:7b")

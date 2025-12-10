@@ -1,8 +1,9 @@
 """Example script demonstrating batch processing capabilities."""
-import asyncio
-import requests
+
 import time
 from pathlib import Path
+
+import requests
 
 
 def example_1_batch_agent_tasks():
@@ -15,23 +16,14 @@ def example_1_batch_agent_tasks():
     tasks = [
         {
             "id": "task1",
-            "description": "Create a Python function to calculate fibonacci numbers"
+            "description": "Create a Python function to calculate fibonacci numbers",
         },
-        {
-            "id": "task2",
-            "description": "Add error handling to the fibonacci function"
-        },
-        {
-            "id": "task3",
-            "description": "Write unit tests for the fibonacci function"
-        },
-        {
-            "id": "task4",
-            "description": "Add docstrings to the fibonacci function"
-        },
+        {"id": "task2", "description": "Add error handling to the fibonacci function"},
+        {"id": "task3", "description": "Write unit tests for the fibonacci function"},
+        {"id": "task4", "description": "Add docstrings to the fibonacci function"},
         {
             "id": "task5",
-            "description": "Optimize the fibonacci function for large numbers"
+            "description": "Optimize the fibonacci function for large numbers",
         },
     ]
 
@@ -43,7 +35,7 @@ def example_1_batch_agent_tasks():
             "chunk_size": 2,
             "parallel": 2,
             "max_loops": 10,
-        }
+        },
     )
 
     if response.status_code != 200:
@@ -75,7 +67,7 @@ def example_1_batch_agent_tasks():
                 f"✓ {prog_data.get('successful', 0)} | "
                 f"✗ {prog_data.get('failed', 0)} | "
                 f"⚡ {prog_data.get('items_per_second', 0):.2f} tasks/s",
-                end=""
+                end="",
             )
 
         if status in ["completed", "failed", "cancelled"]:
@@ -89,7 +81,7 @@ def example_1_batch_agent_tasks():
     if status == "completed":
         result = job["result"]
         summary = result["summary"]
-        print(f"✅ Batch completed successfully!")
+        print("✅ Batch completed successfully!")
         print(f"   Total: {summary['total']}")
         print(f"   Successful: {summary['successful']}")
         print(f"   Failed: {summary['failed']}")
@@ -127,8 +119,8 @@ def example_2_batch_validation():
         json={
             "targets": targets,
             "check_command": "python -m py_compile",  # Simple syntax check
-            "parallel": 3
-        }
+            "parallel": 3,
+        },
     )
 
     if response.status_code != 200:
@@ -152,12 +144,12 @@ def example_2_batch_validation():
     if job["status"] == "completed":
         result = job["result"]
         summary = result["summary"]
-        print(f"✅ Validation completed!")
+        print("✅ Validation completed!")
         print(f"   Passed: {summary['successful']}")
         print(f"   Failed: {summary['failed']}")
 
         # Show failed files
-        if summary['failed'] > 0:
+        if summary["failed"] > 0:
             print("\n   Failed files:")
             for r in result["results"]:
                 if r["status"] == "failed":
@@ -178,21 +170,14 @@ def example_3_batch_tests():
         print("No test files found")
         return
 
-    modules = [
-        {"id": f.stem, "path": str(f)}
-        for f in test_files
-    ]
+    modules = [{"id": f.stem, "path": str(f)} for f in test_files]
 
     print(f"Running {len(modules)} test modules...")
 
     # Submit test job
     response = requests.post(
         "http://127.0.0.1:8000/batch/tests",
-        json={
-            "modules": modules,
-            "test_command": "pytest -q",
-            "parallel": 3
-        }
+        json={"modules": modules, "test_command": "pytest -q", "parallel": 3},
     )
 
     if response.status_code != 200:
@@ -219,7 +204,7 @@ def example_3_batch_tests():
     if job["status"] == "completed":
         result = job["result"]
         summary = result["summary"]
-        print(f"✅ Tests completed!")
+        print("✅ Tests completed!")
         print(f"   Passed: {summary['passed']}")
         print(f"   Failed: {summary['failed']}")
         print(f"   Time: {result['elapsed_seconds']:.1f}s")
@@ -244,10 +229,7 @@ def example_4_batch_mcp_operations():
     # Submit MCP job
     response = requests.post(
         "http://127.0.0.1:8000/batch/mcp-operations",
-        json={
-            "operations": operations,
-            "parallel": 2
-        }
+        json={"operations": operations, "parallel": 2},
     )
 
     if response.status_code != 200:
@@ -271,7 +253,7 @@ def example_4_batch_mcp_operations():
     if job["status"] == "completed":
         result = job["result"]
         summary = result["summary"]
-        print(f"✅ Operations completed!")
+        print("✅ Operations completed!")
         print(f"   Successful: {summary['successful']}")
         print(f"   Failed: {summary['failed']}")
 

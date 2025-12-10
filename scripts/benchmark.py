@@ -4,6 +4,7 @@ Runs a list of tasks through the hybrid agent graph and records per-task metrics
 Requires Ollama models to be available. Results are written to JSONL for later
 aggregation.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -13,8 +14,8 @@ from pathlib import Path
 from typing import List
 
 from ollama_coder.core.config import RunConfig
+from ollama_coder.core.metrics import RunRecord, Timer, log_record, summarize_runs
 from ollama_coder.core.supervisor import build_graph
-from ollama_coder.core.metrics import RunRecord, log_record, summarize_runs, Timer
 
 
 def parse_args():
@@ -97,4 +98,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

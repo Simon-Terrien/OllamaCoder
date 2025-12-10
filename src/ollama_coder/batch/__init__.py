@@ -7,14 +7,15 @@ Provides parallel processing capabilities for:
 - MCP operations (bulk filesystem operations)
 - API requests (bulk task submissions)
 """
+
 from __future__ import annotations
 
-from .job_queue import JobQueue, JobStatus, Job
+from .job_queue import Job, JobQueue, JobStatus
 from .processors import (
     BatchAgentProcessor,
-    BatchValidationProcessor,
-    BatchTestProcessor,
     BatchMCPProcessor,
+    BatchTestProcessor,
+    BatchValidationProcessor,
 )
 from .progress import ProgressTracker
 

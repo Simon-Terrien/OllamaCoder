@@ -1,6 +1,5 @@
 """Simple tests for batch processing that don't require full dependencies."""
-import sys
-from pathlib import Path
+
 
 def test_progress_tracker():
     """Test progress tracking functionality."""
@@ -14,7 +13,7 @@ def test_progress_tracker():
     assert tracker.failed == 0
 
     # Increment successes
-    for i in range(50):
+    for _ in range(50):
         tracker.increment(success=True)
 
     assert tracker.processed == 50
@@ -23,7 +22,7 @@ def test_progress_tracker():
     assert tracker.percentage == 50.0
 
     # Increment failures
-    for i in range(30):
+    for _ in range(30):
         tracker.increment(success=False)
 
     assert tracker.processed == 80
@@ -32,7 +31,7 @@ def test_progress_tracker():
     assert tracker.percentage == 80.0
 
     # Increment skipped
-    for i in range(20):
+    for _ in range(20):
         tracker.increment(skip=True)
 
     assert tracker.processed == 100

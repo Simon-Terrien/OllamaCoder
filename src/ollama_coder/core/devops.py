@@ -1,14 +1,15 @@
 from __future__ import annotations
-from typing import Annotated, TypedDict, List
 
-from langchain_ollama import ChatOllama
+from typing import Annotated, List, TypedDict
+
 from langchain_core.messages import SystemMessage
-from langgraph.graph import StateGraph, START, END
+from langchain_ollama import ChatOllama
+from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 
-from .guardrail import guardrail_node
 from .config import RunConfig
+from .guardrail import guardrail_node
 
 
 def _extract_tool_calls(text: str):

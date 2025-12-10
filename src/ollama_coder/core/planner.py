@@ -1,9 +1,11 @@
 from __future__ import annotations
-from typing import Annotated, TypedDict, List
+
 import json
-from langchain_ollama import ChatOllama
+from typing import Annotated, List, TypedDict
+
 from langchain_core.messages import SystemMessage
-from langgraph.graph import StateGraph, START, END
+from langchain_ollama import ChatOllama
+from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 
 from .config import RunConfig
@@ -21,7 +23,8 @@ def create_planner(cfg: RunConfig):
     llm = ChatOllama(model=cfg.coder_model, format="json")
 
     PROMPT = (
-        "Plan the task into 2-6 steps. Return JSON: {\"steps\":[{\"description\":str,\"specialty\":str}...],\"needs_docs\":bool}. "
+        "Plan the task into 2-6 steps. Return JSON: "
+        '{"steps":[{"description":str,"specialty":str}...],"needs_docs":bool}. '
         "Allowed specialties: backend, frontend, tests, devops, security, docs, general."
     )
 

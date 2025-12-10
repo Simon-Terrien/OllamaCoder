@@ -1,12 +1,13 @@
 """Lightweight metrics helpers for benchmarking runs."""
+
 from __future__ import annotations
 
+import json
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import mean, median
-from typing import Iterable, List, Dict, Any
-import json
-import time
+from typing import Any, Dict, Iterable, List
 
 
 @dataclass
@@ -87,4 +88,3 @@ class Timer:
     @property
     def seconds(self) -> float:
         return getattr(self, "duration", 0.0)
-

@@ -1,14 +1,15 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Callable, Optional
 
-from pydantic_ai import Agent, RunContext, AgentStreamEvent
+from pydantic_ai import Agent, AgentStreamEvent, RunContext
 
-from .models import DevPlan, OrchestrationSummary, CodeResult, DocsResult
-from .planner_agent import planner_agent, PlannerDeps
-from .coding_agent import coding_agent, CodingDeps
-from .security_agent import security_agent, SecurityDeps
-from .docs_agent import docs_agent, DocsDeps
+from .coding_agent import CodingDeps, coding_agent
+from .docs_agent import DocsDeps, docs_agent
+from .models import CodeResult, DevPlan, DocsResult, OrchestrationSummary
+from .planner_agent import PlannerDeps, planner_agent
+from .security_agent import SecurityDeps, security_agent
 
 
 @dataclass
@@ -45,7 +46,9 @@ async def call_planner(ctx: RunContext[OrchestratorDeps], goal: str) -> DevPlan:
 
 
 @orchestrator_agent.tool
-async def call_coding_specialist(ctx: RunContext[OrchestratorDeps], step_description: str, specialty: str) -> CodeResult:
+async def call_coding_specialist(
+    ctx: RunContext[OrchestratorDeps], step_description: str, specialty: str
+) -> CodeResult:
     deps = CodingDeps(
         project_root=ctx.deps.project_root,
         specialty=specialty,

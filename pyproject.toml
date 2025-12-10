@@ -33,6 +33,14 @@ dev = [
     "pre-commit>=4.0.1",
 ]
 
+[tool.ruff]
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = ["E501"]
+
 [project.scripts]
 ollama-coder = "ollama_coder.hybrid_agent:main"
 ollama-mcp-server = "ollama_coder.mcp_server:main"

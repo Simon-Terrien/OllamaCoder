@@ -1,18 +1,20 @@
 """Tests for batch processing functionality."""
+
 from __future__ import annotations
 
 import asyncio
-import pytest
-import pytest_asyncio
 import tempfile
 from pathlib import Path
 
+import pytest
+import pytest_asyncio
+
 from ollama_coder.batch import (
+    BatchMCPProcessor,
+    BatchTestProcessor,
+    BatchValidationProcessor,
     JobQueue,
     JobStatus,
-    BatchValidationProcessor,
-    BatchTestProcessor,
-    BatchMCPProcessor,
     ProgressTracker,
 )
 
@@ -54,9 +56,9 @@ async def test_job_queue_add_and_get(job_queue):
 async def test_job_queue_list_jobs(job_queue):
     """Test listing jobs with filtering."""
     # Add multiple jobs
-    job1 = await job_queue.add_job("type1", {"data": 1})
-    job2 = await job_queue.add_job("type2", {"data": 2})
-    job3 = await job_queue.add_job("type1", {"data": 3})
+    await job_queue.add_job("type1", {"data": 1})
+    await job_queue.add_job("type2", {"data": 2})
+    await job_queue.add_job("type1", {"data": 3})
 
     # List all jobs
     all_jobs = await job_queue.list_jobs()
@@ -139,7 +141,7 @@ def test_progress_tracker():
     assert tracker.failed == 0
 
     # Increment successes
-    for i in range(50):
+    for _ in range(50):
         tracker.increment(success=True)
 
     assert tracker.processed == 50
@@ -148,7 +150,7 @@ def test_progress_tracker():
     assert tracker.percentage == 50.0
 
     # Increment failures
-    for i in range(30):
+    for _ in range(30):
         tracker.increment(success=False)
 
     assert tracker.processed == 80
@@ -157,7 +159,7 @@ def test_progress_tracker():
     assert tracker.percentage == 80.0
 
     # Increment skipped
-    for i in range(20):
+    for _ in range(20):
         tracker.increment(skip=True)
 
     assert tracker.processed == 100
@@ -182,7 +184,7 @@ def test_progress_tracker_rate_calculation():
 
     # Process some items
     time.sleep(0.1)
-    for i in range(10):
+    for _ in range(10):
         tracker.increment(success=True)
         time.sleep(0.01)
 

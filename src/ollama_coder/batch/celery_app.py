@@ -13,9 +13,11 @@ Usage:
     # Monitor with Flower
     celery -A ollama_coder.batch.celery_app flower
 """
+
 from __future__ import annotations
 
 import os
+
 from celery import Celery
 from kombu import Exchange, Queue
 
@@ -42,35 +44,29 @@ app.conf.update(
     result_serializer="json",
     timezone="UTC",
     enable_utc=True,
-
     # Task execution settings
     task_track_started=True,
     task_time_limit=3600,  # 1 hour max per task
     task_soft_time_limit=3300,  # 55 minutes soft limit
     task_acks_late=True,  # Acknowledge after task completion
     task_reject_on_worker_lost=True,
-
     # Result backend settings
     result_expires=86400,  # Results expire after 24 hours
     result_extended=True,  # Store additional task metadata
-
     # Worker settings
     worker_prefetch_multiplier=1,  # One task at a time per worker
     worker_max_tasks_per_child=100,  # Restart worker after 100 tasks (memory)
     worker_disable_rate_limits=False,
-
     # Retry settings
     task_autoretry_for=(Exception,),
     task_retry_kwargs={"max_retries": 3},
     task_retry_backoff=True,
     task_retry_backoff_max=600,  # Max 10 minutes between retries
     task_retry_jitter=True,
-
     # Queue configuration
     task_default_queue="default",
     task_default_exchange="tasks",
     task_default_routing_key="default",
-
     # Define queues with priorities
     task_queues=(
         Queue(
@@ -116,7 +112,6 @@ app.conf.update(
             priority=5,
         ),
     ),
-
     # Route tasks to specific queues
     task_routes={
         "ollama_coder.batch.celery_tasks.process_agent_task": {
@@ -136,11 +131,9 @@ app.conf.update(
             "routing_key": "mcp",
         },
     },
-
     # Monitoring
     worker_send_task_events=True,
     task_send_sent_event=True,
-
     # Security
     task_always_eager=os.getenv("CELERY_ALWAYS_EAGER", "false").lower() == "true",
 )

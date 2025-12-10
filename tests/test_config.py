@@ -1,5 +1,5 @@
 """Tests for RunConfig dataclass."""
-import pytest
+
 from ollama_coder.core.config import RunConfig
 
 
@@ -11,7 +11,7 @@ def test_default_config():
     assert cfg.recursion_limit == 80
     assert cfg.coder_model == "qwen2.5-coder:7b"
     assert cfg.reviewer_model == "llama3.2"
-    assert cfg.apply_changes == True
+    assert cfg.apply_changes
 
 
 def test_custom_config():
@@ -29,7 +29,7 @@ def test_custom_config():
     assert cfg.recursion_limit == 50
     assert cfg.coder_model == "codellama:7b"
     assert cfg.reviewer_model == "mistral:7b"
-    assert cfg.apply_changes == False
+    assert not cfg.apply_changes
 
 
 def test_none_check_command():

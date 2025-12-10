@@ -1,14 +1,13 @@
 """Batch processors for different operation types."""
+
 from __future__ import annotations
 
 import asyncio
-import subprocess
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ..core.config import RunConfig
-from ..core.supervisor import build_graph
 from ..core.mcp_loader import get_mcp_tools
+from ..core.supervisor import build_graph
 from .job_queue import Job, JobQueue
 from .progress import ProgressTracker
 
@@ -66,15 +65,11 @@ class BatchAgentProcessor:
             chunk_tasks = []
 
             for task_data in chunk:
-                chunk_tasks.append(
-                    self._process_single_task(
-                        graph, task_data, tracker, semaphore
-                    )
-                )
+                chunk_tasks.append(self._process_single_task(graph, task_data, tracker, semaphore))
 
             chunk_results = await asyncio.gather(*chunk_tasks, return_exceptions=True)
 
-            for task_data, result in zip(chunk, chunk_results):
+            for task_data, result in zip(chunk, chunk_results, strict=False):
                 if isinstance(result, Exception):
                     results.append(
                         {
@@ -210,14 +205,11 @@ class BatchValidationProcessor:
 
         # Process in parallel with semaphore
         semaphore = asyncio.Semaphore(parallel)
-        tasks = [
-            self._validate_target(target, check_cmd, tracker, semaphore)
-            for target in targets
-        ]
+        tasks = [self._validate_target(target, check_cmd, tracker, semaphore) for target in targets]
 
         validation_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        for target, result in zip(targets, validation_results):
+        for target, result in zip(targets, validation_results, strict=False):
             if isinstance(result, Exception):
                 results.append(
                     {
@@ -338,14 +330,11 @@ class BatchTestProcessor:
 
         # Process in parallel
         semaphore = asyncio.Semaphore(parallel)
-        tasks = [
-            self._run_test_module(module, test_cmd, tracker, semaphore)
-            for module in modules
-        ]
+        tasks = [self._run_test_module(module, test_cmd, tracker, semaphore) for module in modules]
 
         test_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        for module, result in zip(modules, test_results):
+        for module, result in zip(modules, test_results, strict=False):
             if isinstance(result, Exception):
                 results.append(
                     {
@@ -469,14 +458,11 @@ class BatchMCPProcessor:
 
         # Process in parallel
         semaphore = asyncio.Semaphore(parallel)
-        tasks = [
-            self._execute_operation(op, tool_map, tracker, semaphore)
-            for op in operations
-        ]
+        tasks = [self._execute_operation(op, tool_map, tracker, semaphore) for op in operations]
 
         op_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        for op, result in zip(operations, op_results):
+        for op, result in zip(operations, op_results, strict=False):
             if isinstance(result, Exception):
                 results.append(
                     {
@@ -539,9 +525,7 @@ class BatchMCPProcessor:
                     if not tool:
                         raise ValueError("write_file tool not available")
 
-                    result = await tool.ainvoke(
-                        {"path": operation["path"], "content": operation["content"]}
-                    )
+                    result = await tool.ainvoke({"path": operation["path"], "content": operation["content"]})
 
                 elif op_type == "list":
                     tool = tool_map.get("list_directory")

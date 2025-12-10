@@ -1,5 +1,6 @@
 """Tests for metrics helper functions."""
-from ollama_coder.core.metrics import summarize_runs, RunRecord
+
+from ollama_coder.core.metrics import RunRecord, summarize_runs
 
 
 def test_summarize_runs_empty():

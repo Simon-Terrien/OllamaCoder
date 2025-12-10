@@ -1,17 +1,19 @@
 from __future__ import annotations
+
 import json
-from typing import Annotated, TypedDict, List
-from langchain_ollama import ChatOllama
+from typing import Annotated, List, TypedDict
+
 from langchain_core.messages import SystemMessage
-from langgraph.graph import StateGraph, START, END
+from langchain_ollama import ChatOllama
+from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 
-from .config import RunConfig
-from .squad import create_squad
 from .architect import create_architect
-from .mcp_loader import get_mcp_tools
+from .config import RunConfig
 from .devops import create_devops
+from .mcp_loader import get_mcp_tools
 from .planner import create_planner
+from .squad import create_squad
 
 
 class SupState(TypedDict, total=False):
@@ -37,12 +39,14 @@ def supervisor_node(state: SupState):
         "You are a Supervisor.\n"
         "Routing rules:\n"
         "- If the user asks for architecture, ISO-42010, security posture, risks, documentation: route to Architect.\n"
-        "- If the user asks for CI/CD, Docker, containers, Kubernetes, Helm, deployment pipelines, infra-as-code: route to DevOps.\n"
+        "- If the user asks for CI/CD, Docker, containers, Kubernetes, Helm, deployment pipelines, infra-as-code: "
+        "route to DevOps.\n"
         "- If the user asks for coding or tests on application code: route to CodingSquad.\n"
         "- If the user asks to plan, roadmap, or break down tasks: route to Planner.\n"
-        "- If a plan exists, dispatch each step in order; map specialties: devops->DevOps, security->Architect, docs->Architect, tests/backend/frontend/general->CodingSquad.\n"
+        "- If a plan exists, dispatch each step in order; map specialties: devops->DevOps, security->Architect, "
+        "docs->Architect, tests/backend/frontend/general->CodingSquad.\n"
         "- Otherwise: FINISH.\n"
-        "Return JSON only: {\"next\": \"Planner\" | \"Architect\" | \"DevOps\" | \"CodingSquad\" | \"FINISH\"}"
+        'Return JSON only: {"next": "Planner" | "Architect" | "DevOps" | "CodingSquad" | "FINISH"}'
     )
     res = llm.invoke([SystemMessage(content=sys_prompt)] + state["messages"])
     try:

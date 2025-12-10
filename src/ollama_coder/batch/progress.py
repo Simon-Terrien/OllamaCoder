@@ -1,9 +1,10 @@
 """Progress tracking for batch operations."""
+
 from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 
 @dataclass

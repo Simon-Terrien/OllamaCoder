@@ -11,35 +11,32 @@ Run:
   uv run ollama-coder-api
 Then open http://127.0.0.1:8000/docs
 """
+
 from __future__ import annotations
 
-import asyncio
-from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from .core.config import RunConfig
-from .core.supervisor import build_graph
-from .core.mcp_loader import get_mcp_tools
-from .core.squad import create_squad
-from .core.architect import create_architect
-from .core.devops import create_devops
-
-# Pydantic-AI orchestrator stack
-from .pydantic_agents.orchestrator import orchestrator_agent, OrchestratorDeps
-
 # Batch processing
 from .batch import (
+    BatchAgentProcessor,
+    BatchMCPProcessor,
+    BatchTestProcessor,
+    BatchValidationProcessor,
     JobQueue,
     JobStatus,
-    BatchAgentProcessor,
-    BatchValidationProcessor,
-    BatchTestProcessor,
-    BatchMCPProcessor,
 )
+from .core.architect import create_architect
+from .core.config import RunConfig
+from .core.devops import create_devops
+from .core.mcp_loader import get_mcp_tools
+from .core.squad import create_squad
+from .core.supervisor import build_graph
 
+# Pydantic-AI orchestrator stack
+from .pydantic_agents.orchestrator import OrchestratorDeps, orchestrator_agent
 
 app = FastAPI(title="Ollama Coder API", version="0.2.0")
 
@@ -232,7 +229,11 @@ async def run_session(session_id: str, req: SessionRunRequest):
     )
 
     # persist updated messages
-    session.messages = [("user", m.content) if getattr(m, "type", "") == "human" else ("ai", str(m.content)) for m in final_state.get("messages", []) if getattr(m, "content", None)]  # type: ignore[attr-defined]
+    session.messages = [
+        ("user", m.content) if getattr(m, "type", "") == "human" else ("ai", str(m.content))
+        for m in final_state.get("messages", [])
+        if getattr(m, "content", None)
+    ]  # type: ignore[attr-defined]
 
     msgs: List[str] = []
     for m in final_state.get("messages", []):
@@ -565,9 +566,7 @@ async def list_batch_jobs(
     queue = await get_batch_queue()
 
     job_status = JobStatus(status) if status else None
-    jobs = await queue.list_jobs(
-        status=job_status, job_type=job_type, limit=limit, offset=offset
-    )
+    jobs = await queue.list_jobs(status=job_status, job_type=job_type, limit=limit, offset=offset)
 
     job_responses = [
         JobResponse(
@@ -595,7 +594,8 @@ async def cancel_batch_job(job_id: str):
 
     if not cancelled:
         raise HTTPException(
-            status_code=400, detail="Job cannot be cancelled (not found or already completed)"
+            status_code=400,
+            detail="Job cannot be cancelled (not found or already completed)",
         )
 
     return {"status": "cancelled", "job_id": job_id}
@@ -617,11 +617,19 @@ async def get_batch_stats():
 try:
     from .batch.celery_tasks import (
         batch_agent_tasks as celery_batch_agent_tasks,
-        batch_validation as celery_batch_validation,
-        batch_tests as celery_batch_tests,
+    )
+    from .batch.celery_tasks import (
         batch_mcp_operations as celery_batch_mcp_operations,
-        get_task_status,
+    )
+    from .batch.celery_tasks import (
+        batch_tests as celery_batch_tests,
+    )
+    from .batch.celery_tasks import (
+        batch_validation as celery_batch_validation,
+    )
+    from .batch.celery_tasks import (
         get_group_status,
+        get_task_status,
     )
 
     CELERY_AVAILABLE = True
@@ -648,7 +656,7 @@ async def submit_celery_batch_agent_tasks(req: BatchAgentTaskRequest):
     if not CELERY_AVAILABLE:
         raise HTTPException(
             status_code=503,
-            detail="Celery backend not available. Install with: pip install celery redis"
+            detail="Celery backend not available. Install with: pip install celery redis",
         )
 
     config_dict = {
@@ -661,16 +669,14 @@ async def submit_celery_batch_agent_tasks(req: BatchAgentTaskRequest):
     }
 
     # Submit to Celery
-    group_id = celery_batch_agent_tasks.apply_async(
-        args=[req.tasks, config_dict]
-    ).id
+    group_id = celery_batch_agent_tasks.apply_async(args=[req.tasks, config_dict]).id
 
     return {
         "backend": "celery",
         "group_id": group_id,
         "status": "submitted",
         "total_tasks": len(req.tasks),
-        "monitor_url": f"/batch/celery/group/{group_id}"
+        "monitor_url": f"/batch/celery/group/{group_id}",
     }
 
 
@@ -678,21 +684,16 @@ async def submit_celery_batch_agent_tasks(req: BatchAgentTaskRequest):
 async def submit_celery_batch_validation(req: BatchValidationRequest):
     """Submit batch validation using Celery."""
     if not CELERY_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail="Celery backend not available"
-        )
+        raise HTTPException(status_code=503, detail="Celery backend not available")
 
-    group_id = celery_batch_validation.apply_async(
-        args=[req.targets, req.check_command]
-    ).id
+    group_id = celery_batch_validation.apply_async(args=[req.targets, req.check_command]).id
 
     return {
         "backend": "celery",
         "group_id": group_id,
         "status": "submitted",
         "total_tasks": len(req.targets),
-        "monitor_url": f"/batch/celery/group/{group_id}"
+        "monitor_url": f"/batch/celery/group/{group_id}",
     }
 
 
@@ -700,21 +701,16 @@ async def submit_celery_batch_validation(req: BatchValidationRequest):
 async def submit_celery_batch_tests(req: BatchTestRequest):
     """Submit batch tests using Celery."""
     if not CELERY_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail="Celery backend not available"
-        )
+        raise HTTPException(status_code=503, detail="Celery backend not available")
 
-    group_id = celery_batch_tests.apply_async(
-        args=[req.modules, req.test_command]
-    ).id
+    group_id = celery_batch_tests.apply_async(args=[req.modules, req.test_command]).id
 
     return {
         "backend": "celery",
         "group_id": group_id,
         "status": "submitted",
         "total_tasks": len(req.modules),
-        "monitor_url": f"/batch/celery/group/{group_id}"
+        "monitor_url": f"/batch/celery/group/{group_id}",
     }
 
 
@@ -722,21 +718,16 @@ async def submit_celery_batch_tests(req: BatchTestRequest):
 async def submit_celery_batch_mcp(req: BatchMCPRequest):
     """Submit batch MCP operations using Celery."""
     if not CELERY_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail="Celery backend not available"
-        )
+        raise HTTPException(status_code=503, detail="Celery backend not available")
 
-    group_id = celery_batch_mcp_operations.apply_async(
-        args=[req.operations]
-    ).id
+    group_id = celery_batch_mcp_operations.apply_async(args=[req.operations]).id
 
     return {
         "backend": "celery",
         "group_id": group_id,
         "status": "submitted",
         "total_tasks": len(req.operations),
-        "monitor_url": f"/batch/celery/group/{group_id}"
+        "monitor_url": f"/batch/celery/group/{group_id}",
     }
 
 

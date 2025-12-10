@@ -3,22 +3,22 @@
 Each task corresponds to a batch processor operation and can be
 executed by distributed Celery workers.
 """
+
 from __future__ import annotations
 
 import asyncio
 from typing import Any, Dict, List
 
-from celery import Task, group, chord
+from celery import Task, group
 from celery.result import AsyncResult
 
+from ..core.config import RunConfig
 from .celery_app import app
 from .processors import (
-    BatchAgentProcessor,
-    BatchValidationProcessor,
-    BatchTestProcessor,
     BatchMCPProcessor,
+    BatchTestProcessor,
+    BatchValidationProcessor,
 )
-from ..core.config import RunConfig
 
 
 class CallbackTask(Task):
@@ -61,9 +61,6 @@ def process_agent_task(self, task_data: Dict[str, Any], config_dict: Dict[str, A
     try:
         # Create RunConfig from dict
         config = RunConfig(**config_dict)
-
-        # Create processor
-        processor = BatchAgentProcessor(config)
 
         # Run async processor in event loop
         loop = asyncio.new_event_loop()
@@ -155,7 +152,6 @@ def process_validation(self, target: Dict[str, Any], check_command: str) -> Dict
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            import asyncio
 
             class MockSemaphore:
                 async def __aenter__(self):
@@ -169,9 +165,7 @@ def process_validation(self, target: Dict[str, Any], check_command: str) -> Dict
                     pass
 
             result = loop.run_until_complete(
-                processor._validate_target(
-                    target, check_command, MockTracker(), MockSemaphore()
-                )
+                processor._validate_target(target, check_command, MockTracker(), MockSemaphore())
             )
             return result
         finally:
@@ -213,7 +207,6 @@ def process_test(self, module: Dict[str, Any], test_command: str) -> Dict[str, A
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            import asyncio
 
             class MockSemaphore:
                 async def __aenter__(self):
@@ -227,9 +220,7 @@ def process_test(self, module: Dict[str, Any], test_command: str) -> Dict[str, A
                     pass
 
             result = loop.run_until_complete(
-                processor._run_test_module(
-                    module, test_command, MockTracker(), MockSemaphore()
-                )
+                processor._run_test_module(module, test_command, MockTracker(), MockSemaphore())
             )
             return result
         finally:
@@ -289,9 +280,7 @@ def process_mcp_operation(self, operation: Dict[str, Any]) -> Dict[str, Any]:
                     pass
 
             result = loop.run_until_complete(
-                processor._execute_operation(
-                    operation, tool_map, MockTracker(), MockSemaphore()
-                )
+                processor._execute_operation(operation, tool_map, MockTracker(), MockSemaphore())
             )
             return result
         finally:
@@ -321,9 +310,7 @@ def batch_agent_tasks(self, tasks: List[Dict[str, Any]], config_dict: Dict[str, 
     Returns:
         Group task ID for monitoring
     """
-    job = group(
-        process_agent_task.s(task, config_dict) for task in tasks
-    )
+    job = group(process_agent_task.s(task, config_dict) for task in tasks)
     result = job.apply_async()
     return result.id
 
@@ -342,9 +329,7 @@ def batch_validation(self, targets: List[Dict[str, Any]], check_command: str) ->
     Returns:
         Group task ID
     """
-    job = group(
-        process_validation.s(target, check_command) for target in targets
-    )
+    job = group(process_validation.s(target, check_command) for target in targets)
     result = job.apply_async()
     return result.id
 
@@ -363,9 +348,7 @@ def batch_tests(self, modules: List[Dict[str, Any]], test_command: str) -> str:
     Returns:
         Group task ID
     """
-    job = group(
-        process_test.s(module, test_command) for module in modules
-    )
+    job = group(process_test.s(module, test_command) for module in modules)
     result = job.apply_async()
     return result.id
 
@@ -383,9 +366,7 @@ def batch_mcp_operations(self, operations: List[Dict[str, Any]]) -> str:
     Returns:
         Group task ID
     """
-    job = group(
-        process_mcp_operation.s(operation) for operation in operations
-    )
+    job = group(process_mcp_operation.s(operation) for operation in operations)
     result = job.apply_async()
     return result.id
 

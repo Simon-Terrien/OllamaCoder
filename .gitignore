@@ -17,3 +17,4 @@ uv.lock
 .venv
 multiagent_code_cli_v2/
 multiagent_code_cli_v4/
+build/

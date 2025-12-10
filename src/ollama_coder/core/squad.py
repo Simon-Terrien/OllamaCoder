@@ -1,15 +1,17 @@
 from __future__ import annotations
-from typing import Annotated, Literal, TypedDict, List
-from langchain_ollama import ChatOllama
+
+from typing import Annotated, List, Literal, TypedDict
+
 from langchain_core.messages import SystemMessage
 from langchain_core.tools import tool
-from langgraph.graph import StateGraph, START, END
+from langchain_ollama import ChatOllama
+from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 
+from .config import RunConfig
 from .guardrail import guardrail_node
 from .validator import validator_node
-from .config import RunConfig
 
 
 def _extract_tool_calls(text: str):
@@ -86,7 +88,11 @@ def create_squad(tools, cfg: RunConfig):
             if maybe:
                 resp.tool_calls = maybe
                 resp.content = ""
-        return {"messages": [resp], "active_agent": "Coder", "loop_count": state["loop_count"] + 1}
+        return {
+            "messages": [resp],
+            "active_agent": "Coder",
+            "loop_count": state["loop_count"] + 1,
+        }
 
     def reviewer_node(state: SquadState):
         prompt = (
@@ -100,7 +106,11 @@ def create_squad(tools, cfg: RunConfig):
             if maybe:
                 resp.tool_calls = maybe
                 resp.content = ""
-        return {"messages": [resp], "active_agent": "Reviewer", "loop_count": state["loop_count"] + 1}
+        return {
+            "messages": [resp],
+            "active_agent": "Reviewer",
+            "loop_count": state["loop_count"] + 1,
+        }
 
     def after_agent(state: SquadState):
         last = state["messages"][-1]

@@ -1,8 +1,22 @@
 from __future__ import annotations
+
 from typing import List
+
 from langchain_core.messages import ToolMessage
 
-BLOCKED_CMD_SUBSTR = [" rm ", " rm-", " rm -rf", "sudo", "mkfs", "shutdown", "reboot", "> /dev/sd", ";rm ", "&&rm ", "| rm "]
+BLOCKED_CMD_SUBSTR = [
+    " rm ",
+    " rm-",
+    " rm -rf",
+    "sudo",
+    "mkfs",
+    "shutdown",
+    "reboot",
+    "> /dev/sd",
+    ";rm ",
+    "&&rm ",
+    "| rm ",
+]
 BLOCKED_CMD_PREFIXES = ["rm ", "rm-"]
 SYSTEM_PATH_PREFIXES = ("/etc", "/usr", "/bin", "/sbin", "/lib")
 
@@ -21,7 +35,9 @@ def guardrail_node(state):
         if name == "run_command":
             cmd = str(args.get("command", ""))
             low = cmd.lower()
-            if any(sub in low for sub in BLOCKED_CMD_SUBSTR) or any(low.startswith(prefix) for prefix in BLOCKED_CMD_PREFIXES):
+            if any(sub in low for sub in BLOCKED_CMD_SUBSTR) or any(
+                low.startswith(prefix) for prefix in BLOCKED_CMD_PREFIXES
+            ):
                 rejections.append(
                     ToolMessage(
                         tool_call_id=call["id"],

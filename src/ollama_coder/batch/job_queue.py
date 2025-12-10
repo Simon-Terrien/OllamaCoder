@@ -1,4 +1,5 @@
 """Lightweight async job queue with SQLite persistence for batch processing."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,7 +8,6 @@ import sqlite3
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
