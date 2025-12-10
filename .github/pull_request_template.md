@@ -3,7 +3,7 @@
 
 ## Testing
 - [ ] `uv run pytest -q`
-- [ ] Other: 
+- [ ] Other:
 
 ## Checklist
 - [ ] No secrets or credentials added
