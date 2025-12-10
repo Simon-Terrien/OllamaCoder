@@ -1,0 +1,46 @@
+[project]
+name = "ollama-coder"
+version = "0.1.0"
+description = "Ralph-style self-correcting coding agent with guardrails powered by Ollama + LangGraph"
+authors = [{ name = "Your Name" }]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.2.19",
+    "langchain-core>=0.3.8",
+    "langchain-community>=0.3.1",
+    "langchain-ollama>=0.1.1",
+    "langchain-mcp-adapters>=0.0.7",
+    "mcp>=0.1.3",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+    "pydantic-ai>=0.0.15",
+]
+
+[project.optional-dependencies]
+celery = [
+    "celery[redis]>=5.4.0",
+    "redis>=5.0.0",
+    "flower>=2.0.0",  # Celery monitoring UI
+]
+rabbitmq = [
+    "celery[librabbitmq]>=5.4.0",
+]
+dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.6.9",
+    "pre-commit>=4.0.1",
+]
+
+[project.scripts]
+ollama-coder = "ollama_coder.hybrid_agent:main"
+ollama-mcp-server = "ollama_coder.mcp_server:main"
+ollama-coder-api = "ollama_coder.api:main"
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

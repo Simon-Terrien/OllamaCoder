@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+logs/
+*.egg-info/
+
+# Batch processing
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Local virtualenv and nested repos we don’t want tracked
+uv.lock
+.venv
+multiagent_code_cli_v2/
+multiagent_code_cli_v4/
