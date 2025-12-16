@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 logs/
 *.egg-info/
+project/
 
 # Batch processing
 data/

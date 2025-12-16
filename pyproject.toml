@@ -45,6 +45,7 @@ ignore = ["E501"]
 ollama-coder = "ollama_coder.hybrid_agent:main"
 ollama-mcp-server = "ollama_coder.mcp_server:main"
 ollama-coder-api = "ollama_coder.api:main"
+iso42010_analyzer = "ollama_coder.tools.iso42010_analyzer:main"
 
 [tool.uv]
 package = true
