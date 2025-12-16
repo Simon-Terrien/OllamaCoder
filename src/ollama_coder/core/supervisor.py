@@ -34,6 +34,52 @@ class SupState(TypedDict, total=False):
 def supervisor_node(state: SupState):
     cfg = state.get("config")
     model = cfg.coder_model if cfg else "qwen2.5-coder:7b"
+    plan = state.get("plan") or []
+    step_index = state.get("step_index", 0)
+
+    if plan:
+        specialties = {
+            "devops": "DevOps",
+            "security": "Architect",
+            "docs": "Architect",
+            "tests": "CodingSquad",
+            "backend": "CodingSquad",
+            "frontend": "CodingSquad",
+            "general": "CodingSquad",
+        }
+
+        if step_index >= len(plan):
+            return {
+                "next": "FINISH",
+                "loop_count": state.get("loop_count", 0),
+                "active_agent": state.get("active_agent", "Coder"),
+                "validator_ok": state.get("validator_ok", False),
+                "blocked": state.get("blocked", False),
+                "config": cfg,
+                "plan": plan,
+                "step_index": step_index,
+                "needs_docs": state.get("needs_docs", False),
+                "current_specialty": state.get("current_specialty", ""),
+                "steps_done": len(plan),
+            }
+
+        current_step = plan[step_index] or {}
+        specialty = str(current_step.get("specialty", "general")).lower()
+        decision = specialties.get(specialty, "CodingSquad")
+        return {
+            "next": decision,
+            "loop_count": state.get("loop_count", 0),
+            "active_agent": state.get("active_agent", "Coder"),
+            "validator_ok": state.get("validator_ok", False),
+            "blocked": state.get("blocked", False),
+            "config": cfg,
+            "plan": plan,
+            "step_index": step_index + 1,
+            "needs_docs": state.get("needs_docs", False),
+            "current_specialty": specialty,
+            "steps_done": step_index,
+        }
+
     llm = ChatOllama(model=model, format="json")
     sys_prompt = (
         "You are a Supervisor.\n"
@@ -60,10 +106,11 @@ def supervisor_node(state: SupState):
         "validator_ok": state.get("validator_ok", False),
         "blocked": state.get("blocked", False),
         "config": state.get("config"),
-        "plan": state.get("plan", []),
-        "step_index": state.get("step_index", 0),
+        "plan": plan,
+        "step_index": step_index,
         "needs_docs": state.get("needs_docs", False),
         "current_specialty": state.get("current_specialty", ""),
+        "steps_done": state.get("steps_done", 0),
     }
 
 
