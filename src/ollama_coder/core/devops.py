@@ -67,7 +67,7 @@ def create_devops(tools, cfg: RunConfig):
         "2) read_file(...) to inspect current configs.\n"
         "3) write_file(...) to add/update infra/CI files.\n"
         "4) run_command(...) to validate where appropriate.\n\n"
-        "apply_changes may be false; in that case, describe patches but do NOT skip tool calls.\n"
+        "If apply_changes is false, run_command and write_file are blocked; describe patches and commands instead of invoking them.\n"
         "NEVER execute destructive commands or touch system paths; rely on guardrails.\n"
     )
 

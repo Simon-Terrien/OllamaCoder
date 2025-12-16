@@ -81,6 +81,7 @@ def create_squad(tools, cfg: RunConfig):
             "Always respond with tool calls, not prose. Do NOT wrap in markdown."
             "When you think code is ready, hand off to reviewer or rely on validator."
             f" apply_changes={state['config'].apply_changes if state.get('config') else True}."
+            " If apply_changes is false, write_file and run_command calls are blocked; share intended diffs and tests instead."
         )
         resp = coder_llm.invoke([SystemMessage(content=prompt)] + state["messages"])
         if not getattr(resp, "tool_calls", None):

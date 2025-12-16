@@ -1,5 +1,6 @@
 """Tests for the guardrail security module."""
 
+from ollama_coder.core.config import RunConfig
 from ollama_coder.core.guardrail import (
     BLOCKED_CMD_SUBSTR,
     SYSTEM_PATH_PREFIXES,
@@ -114,6 +115,52 @@ def test_guardrail_no_tool_calls():
     result = guardrail_node(state)
     assert not result["blocked"]
     assert result["messages"] == []
+
+
+def test_guardrail_blocks_write_when_apply_changes_false(tmp_path):
+    """Guardrail blocks write_file when apply_changes is False and prevents mutations."""
+    dest = tmp_path / "note.txt"
+    msg = MockMessage(
+        tool_calls=[
+            {
+                "name": "write_file",
+                "args": {"path": str(dest), "content": "data"},
+                "id": "readonly-write",
+            }
+        ]
+    )
+    state = {"messages": [msg], "config": RunConfig(apply_changes=False)}
+    result = guardrail_node(state)
+
+    assert result["blocked"]
+    assert "apply_changes is False" in result["messages"][0].content
+    if not result["blocked"]:
+        dest.write_text("data")
+    assert not dest.exists()
+
+
+def test_guardrail_blocks_run_command_when_apply_changes_false(tmp_path):
+    """Guardrail blocks run_command when apply_changes is False to keep filesystem clean."""
+    dest = tmp_path / "cmd.txt"
+    msg = MockMessage(
+        tool_calls=[
+            {
+                "name": "run_command",
+                "args": {"command": f"sh -c 'echo hi > {dest}'"},
+                "id": "readonly-cmd",
+            }
+        ]
+    )
+    state = {"messages": [msg], "config": RunConfig(apply_changes=False)}
+    result = guardrail_node(state)
+
+    assert result["blocked"]
+    assert "apply_changes is False" in result["messages"][0].content
+    if not result["blocked"]:
+        import subprocess
+
+        subprocess.run(msg.tool_calls[0]["args"]["command"], shell=True, check=False)
+    assert not dest.exists()
 
 
 def test_blocked_substrings_present():
