@@ -14,6 +14,8 @@ Then open http://127.0.0.1:8000/docs
 
 from __future__ import annotations
 
+import time
+import uuid
 from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import FastAPI, HTTPException
@@ -98,6 +100,43 @@ class PydOrchResponse(BaseModel):
     summary: dict
 
 
+# OpenAI-compatible Chat Completions
+class OpenAIMessage(BaseModel):
+    role: Literal["system", "user", "assistant"]
+    content: str
+
+
+class ChatCompletionRequest(BaseModel):
+    model: str | None = None
+    messages: List[OpenAIMessage]
+    max_loops: int = 8
+    recursion_limit: int = 80
+    check_command: str | None = "pytest -q"
+    coder_model: str | None = None
+    reviewer_model: str | None = None
+
+
+class ChatCompletionChoice(BaseModel):
+    index: int
+    message: OpenAIMessage
+    finish_reason: str = "stop"
+
+
+class ChatCompletionUsage(BaseModel):
+    prompt_tokens: Optional[int] = None
+    completion_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None
+
+
+class ChatCompletionResponse(BaseModel):
+    id: str
+    object: Literal["chat.completion"]
+    created: int
+    model: str
+    choices: List[ChatCompletionChoice]
+    usage: Optional[ChatCompletionUsage] = None
+
+
 class _AgentSession:
     def __init__(self, id: str, mode: str, cfg: RunConfig, app):
         self.id = id
@@ -172,8 +211,6 @@ async def create_session(req: CreateSessionRequest):
         app_graph = create_devops(tools, cfg)
     else:
         raise HTTPException(status_code=400, detail="Unknown mode")
-
-    import uuid
 
     sid = uuid.uuid4().hex[:8]
     SESSIONS[sid] = _AgentSession(sid, mode, cfg, app_graph)
@@ -265,6 +302,74 @@ async def run_pydantic_orchestrator(req: PydOrchRequest):
     result = await orchestrator_agent.run(req.task, deps=deps)
     # result.output is a Pydantic model (OrchestrationSummary)
     return PydOrchResponse(status="ok", summary=result.output.model_dump())
+
+
+# ----------------------
+# OpenAI-compatible Chat Completions endpoint
+# ----------------------
+
+
+@app.post("/v1/chat/completions", response_model=ChatCompletionResponse)
+async def chat_completions(req: ChatCompletionRequest):
+    """Lightweight OpenAI-style chat completions facade over the supervisor graph."""
+    if not req.messages:
+        raise HTTPException(status_code=400, detail="messages cannot be empty")
+
+    cfg = RunConfig(
+        check_command=req.check_command or None,
+        max_loops=req.max_loops,
+        recursion_limit=req.recursion_limit,
+        coder_model=req.coder_model or req.model or "qwen2.5-coder:7b",
+        reviewer_model=req.reviewer_model or "llama3.2",
+    )
+
+    graph = await build_graph(cfg)
+
+    initial_state = {
+        "messages": [(m.role, m.content) for m in req.messages],
+        "active_agent": "Coder",
+        "loop_count": 0,
+        "validator_ok": False,
+        "blocked": False,
+        "config": cfg,
+    }
+
+    final_state = await graph.ainvoke(
+        initial_state,
+        config={"recursion_limit": cfg.recursion_limit},
+    )
+
+    assistant_content: str | None = None
+    for m in reversed(final_state.get("messages", [])):
+        role = getattr(m, "type", getattr(m, "role", ""))
+        content = getattr(m, "content", None)
+        if role in ("ai", "assistant") and content:
+            assistant_content = str(content)
+            break
+    if assistant_content is None:
+        for m in reversed(final_state.get("messages", [])):
+            content = getattr(m, "content", None)
+            if content:
+                assistant_content = str(content)
+                break
+
+    if assistant_content is None:
+        assistant_content = ""
+
+    choice = ChatCompletionChoice(
+        index=0,
+        message=OpenAIMessage(role="assistant", content=assistant_content),
+        finish_reason="stop",
+    )
+
+    return ChatCompletionResponse(
+        id=f"chatcmpl-{uuid.uuid4().hex}",
+        object="chat.completion",
+        created=int(time.time()),
+        model=cfg.coder_model,
+        choices=[choice],
+        usage=ChatCompletionUsage(),
+    )
 
 
 # ----------------------

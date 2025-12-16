@@ -75,6 +75,9 @@ uv run pytest tests/test_guardrail.py -v
 uv run pytest tests/test_guardrail.py::test_guardrail_blocks_rm -v
 ```
 
+### Sanity check
+- `tests/test_hello.py` expects running `python hello.py` from repo root prints `Hello` (stdout stripped) with no stderr; keep `hello.py` aligned to avoid baseline failure.
+
 ### API Server
 ```bash
 # Start FastAPI server
@@ -181,6 +184,8 @@ All batch endpoints are in `api.py`:
 - `GET /batch/jobs` - List jobs
 - `DELETE /batch/jobs/{job_id}` - Cancel job
 - `GET /batch/stats` - Queue statistics
+- `POST /pydantic/run` - Type-safe orchestration via Pydantic-AI
+- `POST /v1/chat/completions` - OpenAI-compatible supervisor facade
 
 ### Key Concepts
 - Jobs are persisted in SQLite at `data/batch_jobs.db`
@@ -197,6 +202,9 @@ uv run pytest tests/test_batch_processing.py -v
 # Test specific processor
 uv run pytest tests/test_batch_processing.py::test_batch_validation_processor -v
 ```
+
+## Quick reference
+- Concise commands/endpoints live in `USAGE_CHEATSHEET.md`; update alongside code/API changes.
 
 ### Common Batch Operations
 ```bash

@@ -1,47 +1,44 @@
-# Running Batch Jobs
+# Ollama Coder
 
-## Overview
-This documentation provides guidance on how to run batch jobs efficiently and effectively.
+Multi‑agent coding system for Ollama/LangGraph with guardrails, a FastAPI surface, batch processing, and an OpenAI-style chat facade.
 
-## Steps to Run a Batch Job
-1. **Prepare the Environment**
-   - Ensure that all necessary dependencies are installed.
-   - Set up any required configuration files.
+## What it does
+- Supervisor graph routes work to Coder/Reviewer squad, Architect, DevOps, and Planner agents.
+- Guardrail blocks destructive shells; Validator runs `pytest -q` by default.
+- HTTP API exposes one-shot runs, long-lived sessions, batch queues, and `/v1/chat/completions` compatibility.
+- MCP server offers filesystem + `run_command` tools; batch processors can drive MCP operations at scale.
+- Includes Pydantic-AI orchestrator endpoint for type-safe automation.
 
-2. **Write the Script**
-   - Create a script file (e.g., `batch_job.sh`) containing the commands to be executed.
-   - Make sure the script is executable by running: `chmod +x batch_job.sh`
+## Install & run
+- Install deps (editable): `uv pip install -e .` (or `pip install -e .`).
+- Hybrid agent REPL: `uv run python -m ollama_coder.hybrid_agent --task "Create hello.py"`.
+- API server: `uv run python -m ollama_coder.api` then open http://127.0.0.1:8000/docs.
+- Standalone MCP server: `uv run python -m ollama_coder.mcp_server`.
+- Console entrypoints (from `pyproject.toml`): `ollama-coder`, `ollama-coder-api`, `ollama-mcp-server`, `iso42010_analyzer`.
+- ISO 42010 snapshot: `uv run iso42010_analyzer --root . --format markdown`.
 
-3. **Submit the Job**
-   - Use the appropriate command to submit the job. For example, on a cluster system, use `qsub batch_job.sh`.
+## API highlights (FastAPI)
+- `GET /health` – MCP/tool check.
+- `POST /run` – single task via supervisor.
+- Sessions: `POST /sessions`, `POST /sessions/{id}/run`, `GET /sessions/{id}`.
+- Pydantic orchestrator: `POST /pydantic/run` for type-safe workflows.
+- OpenAI facade: `POST /v1/chat/completions` (uses supervisor graph/models).
+- Batch queue: `POST /batch/agent-tasks`, `/batch/validation`, `/batch/tests`, `/batch/mcp-operations`; status via `/batch/jobs` + `/batch/stats`; cancellation via `DELETE /batch/jobs/{id}`.
 
-4. **Monitor and Manage Jobs**
-   - Monitor the progress of your job using commands like `qstat` or equivalent.
-   - If necessary, cancel jobs using `qdel <job_id>`.
+## Project layout
+- Core agents & config: `src/ollama_coder/core/`
+- API surface: `src/ollama_coder/api.py`
+- Batch queue + processors: `src/ollama_coder/batch/`
+- MCP server/tools: `src/ollama_coder/mcp_server.py`
+- Tools: `src/ollama_coder/tools/` (e.g., `iso42010_analyzer`)
+- Pydantic orchestrator: `src/ollama_coder/pydantic_agents/`
+- Tests: `tests/` (e.g., `tests/test_batch_processing.py`, `tests/test_hello.py`)
 
-## Best Practices
-- **Resource Allocation**
-  - Allocate resources appropriately to avoid overloading the system.
-- **Error Handling**
-  - Implement error handling in your script to manage failures gracefully.
-- **Logging**
-  - Redirect output and errors to log files for later review.
+## Testing
+- Run all tests: `uv run pytest -q`
+- Example single test: `uv run pytest tests/test_hello.py -q`
+- Validator uses the same command; adjust via `RunConfig.check_command` or API payload.
 
-## Example Script
-```bash
-#!/bin/bash
-# batch_job.sh
-
-echo "Starting batch job at $(date)"
-
-# Your commands here
-
-echo "Batch job completed at $(date)"
-```
-
-## Benchmarks
-
-- Run sample tasks through the agent and log metrics:
-  `uv run python scripts/benchmark.py --coder-model qwen2.5-coder:7b --reviewer-model llama3.2`
-- Summarize accumulated runs (JSONL):
-  `scripts/benchmark_summary.sh logs/benchmark_results.jsonl`
+## Notes
+- Logs stream to `logs/events.jsonl` at runtime.
+- Default models: coder `qwen2.5-coder:7b`, reviewer `llama3.2`; override per request.

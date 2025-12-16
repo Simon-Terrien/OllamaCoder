@@ -4,6 +4,7 @@
 - Core code lives in `src/ollama_coder/`. Key pieces: `hybrid_agent.py` (entrypoint), `core/` (supervisor, planner, guardrail, validator, config), `mcp_server.py` (filesystem/run-command tools), and `pydantic_agents/` (type-safe agent helpers).
 - Tests sit in `tests/`; add new suites as `test_*.py`. Runtime logs default to `logs/events.jsonl` (created at run time).
 - Executable console scripts are defined via `pyproject.toml` under `[project.scripts]` (e.g., `ollama-coder`, `ollama-mcp-server`, `ollama-coder-api`).
+- Quick reference for commands/endpoints lives in `USAGE_CHEATSHEET.md` (keep it current when flows change).
 
 ## Build, Test, and Development Commands
 - Install deps (editable): `uv pip install -e .` (or `pip install -e .` if `uv` is unavailable).
@@ -21,6 +22,7 @@
 - Use `pytest`; name files `test_*.py` and functions `test_*`.
 - Add focused unit tests alongside the feature area; include one positive and one failure/guardrail case when touching `core/` logic.
 - If the validator command changes, mirror that in docs and ensure CI (when present) still runs `pytest -q`.
+- Repository sanity check: `tests/test_hello.py` asserts `hello.py` prints exactly `Hello` (stdout stripped), so preserve that behaviour when modifying the sample script.
 
 ## Commit & Pull Request Guidelines
 - Commit messages: short imperative summary (e.g., "Add guardrail for sudo"); keep subject ≤72 chars.
