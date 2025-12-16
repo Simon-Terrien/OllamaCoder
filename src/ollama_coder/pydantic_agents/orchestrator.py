@@ -34,7 +34,7 @@ orchestrator_agent = Agent[OrchestratorDeps, OrchestrationSummary](
 async def orchestrator_dynamic_context(ctx: RunContext[OrchestratorDeps]) -> str:
     return (
         "You can call tools: call_planner, call_coding_specialist, call_security_specialist, call_docs_specialist. "
-        f"apply_changes={ctx.deps.apply_changes!r}."
+        f"apply_changes={ctx.deps.apply_changes!r}; when false, write_file and run_command calls will be blocked by guardrails."
     )
 
 
