@@ -1,47 +1,34 @@
-# Running Batch Jobs
+# Hybrid Agent Overview
 
-## Overview
-This documentation provides guidance on how to run batch jobs efficiently and effectively.
+## Architecture
+- **Supervisor** orchestrates the workflow, delegating tasks and enforcing guardrails.
+- **Planner** breaks down user goals into actionable steps and coordinates execution.
+- **Coding Squad** focuses on writing and iterating on code changes.
+- **Architect** reviews plans and code for design quality and adherence to patterns.
+- **DevOps** validates commands, manages tool calls, and ensures changes are ready to apply.
 
-## Steps to Run a Batch Job
-1. **Prepare the Environment**
-   - Ensure that all necessary dependencies are installed.
-   - Set up any required configuration files.
+Key entry points:
+- `hybrid_agent.py` — interactive CLI agent runner.
+- `mcp_server.py` — exposes filesystem and run-command tools for MCP-compatible clients.
+- `api` package — FastAPI HTTP interface (`uv run python -m ollama_coder.api`).
 
-2. **Write the Script**
-   - Create a script file (e.g., `batch_job.sh`) containing the commands to be executed.
-   - Make sure the script is executable by running: `chmod +x batch_job.sh`
+## Installation & Running
+- Install in editable mode: `uv pip install -e .`
+- Run the hybrid agent: `uv run python -m ollama_coder.hybrid_agent --task "Create hello.py and test it"`
+- Start the MCP server: `uv run python -m ollama_coder.mcp_server`
+- Launch the HTTP API: `uv run python -m ollama_coder.api`
 
-3. **Submit the Job**
-   - Use the appropriate command to submit the job. For example, on a cluster system, use `qsub batch_job.sh`.
+## Configuration
+- **Models**: set `CODER_MODEL` and `REVIEWER_MODEL` env vars to override defaults.
+- **Validator command**: configure via `VALIDATOR_COMMAND` (defaults to `pytest -q`).
+- **Apply changes**: toggle `APPLY_CHANGES` (true/false) to allow writing files.
 
-4. **Monitor and Manage Jobs**
-   - Monitor the progress of your job using commands like `qstat` or equivalent.
-   - If necessary, cancel jobs using `qdel <job_id>`.
+## Logging
+- Runtime events are written to `logs/events.jsonl`; rotate or archive as needed.
 
-## Best Practices
-- **Resource Allocation**
-  - Allocate resources appropriately to avoid overloading the system.
-- **Error Handling**
-  - Implement error handling in your script to manage failures gracefully.
-- **Logging**
-  - Redirect output and errors to log files for later review.
-
-## Example Script
-```bash
-#!/bin/bash
-# batch_job.sh
-
-echo "Starting batch job at $(date)"
-
-# Your commands here
-
-echo "Batch job completed at $(date)"
-```
+## Testing
+- Run the suite with `uv run pytest -q`.
 
 ## Benchmarks
-
-- Run sample tasks through the agent and log metrics:
-  `uv run python scripts/benchmark.py --coder-model qwen2.5-coder:7b --reviewer-model llama3.2`
-- Summarize accumulated runs (JSONL):
-  `scripts/benchmark_summary.sh logs/benchmark_results.jsonl`
+- Run sample tasks through the agent and log metrics: `uv run python scripts/benchmark.py --coder-model qwen2.5-coder:7b --reviewer-model llama3.2`
+- Summarize accumulated runs (JSONL): `scripts/benchmark_summary.sh logs/benchmark_results.jsonl`
